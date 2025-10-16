@@ -8,7 +8,7 @@
 using namespace std;
 
 const int ShipTypes = 4;
-const int ShipSizeAmount [4] = {0, 1, 1, 0};
+const int ShipSizeAmount [4] = {0, 1, 0, 0};
 
 map <char, bool> IsDirection = {
     {'W', 1},
@@ -17,34 +17,35 @@ map <char, bool> IsDirection = {
     {'D', 1}
 };
 map <char, pair<int,int>> DirectionVector = {
-    {'W', {-1, 0}},
-    {'S', {1, 0}},
+    {'W', {1, 0}},
+    {'S', {-1, 0}},
     {'D', {0, 1}},
     {'A', {0, -1}}
 
 };
 map <char, char> ShipBow = {
-    {'W', 'A'},
-    {'S', 'V'},
+    {'W', 'V'},
+    {'S', 'A'},
     {'D', '>'},
     {'A', '<'}
 
 };
 map <char, char> ShipSterm = {
-    {'W', 'U'},
-    {'S', 'M'},
+    {'W', 'M'},
+    {'S', 'U'},
     {'D', 'C'},
     {'A', 'D'}
 
 };
-const int ACode = 65;
+const int ACode = 64;
 const char ShipCorpse = 'H';
 const char EmptyTile = '~';
 const char DeathTile = 'X';
 const char MissTile = 'O';
-char sea [10][10][10];
-char shots [10][10][10];
-int health_map;
+
+char sea [10][12][12];
+char shots [10][12][12];
+bool death = 0;
 
 
 int read_player_amount(void)
@@ -73,7 +74,7 @@ pair <int, int> read_coordinate(string comment)
         return read_coordinate("Некорректный ввод. Попробуйте снова:\n");
     else
     {
-        ret_val.first = atoi(input1) - 1;
+        ret_val.first = atoi(input1);
         ret_val.second = (int)input2 - ACode;
         return ret_val;
     }
@@ -82,44 +83,34 @@ pair <int, int> read_coordinate(string comment)
 
 char read_direction(string comment)
 {
-    string input;
-    char in;
+    char input;
 
     cout<<comment;
     cin>>input;
-    if (input.length() > 1)
+    input = toupper(input);
+    if (IsDirection[input] != 1)
         {
 
             return read_direction("Некорректный ввод. Попробуйте снова:\n");
         }
          else
         {
-        in = input[0];
-    in = toupper(in);
-    if (IsDirection[in] != 1)
-        {
-
-            return read_direction("Некорректный ввод. Попробуйте снова:\n");
+            return input;
         }
-         else
-        {
-            return in;
-        }
-    }
 }
 
 void show_status(int attacker, int target)
 {
     cout<<"+-ABCDEFJHIJ T ABCDEFGHIJ->\n";
-    for(int i=0;i<10;i++)
+    for(int i=1;i<=10;i++)
     {
         cout<<i%10<<" ";
-        for(int j=0;j<10;j++)
+        for(int j=1;j<=10;j++)
         {
             cout<<sea[attacker][i][j];
         }
         cout<<" | ";
-        for(int j=0;j<10;j++)
+        for(int j=1;j<=10;j++)
         {
             cout<<shots[target][i][j];
         }
@@ -127,18 +118,25 @@ void show_status(int attacker, int target)
     }
 }
 
-void deal_damage(pair <int, int> coordinate)
+void dfs_check_if_dead(int x, int y, int target, char block)
 {
-
+    cout<<"dfs:"<<x<<" "<<y<<" "<<block<<endl;
+    if(sea[target][x][y] != DeathTile)
+    {
+        death = 0;
+    }
+    if(sea[target][x-1][y] != EmptyTile && block != 'W')
+        dfs_check_if_dead(x-1, y, target, 'S');
+    if(sea[target][x+1][y] != EmptyTile && block != 'S')
+        dfs_check_if_dead(x+1, y, target, 'W');
+    if(sea[target][x][y-1] != EmptyTile && block != 'A')
+        dfs_check_if_dead(x, y-1, target, 'D');
+    if(sea[target][x][y+1] != EmptyTile && block != 'D')
+        dfs_check_if_dead(x, y+1, target, 'A');
 }
-
 void make_shot(int attacker, int target)
 {
     pair <int, int> coordinate;
-    system("cls");
-    cout<<"Игрок "<<attacker + 1
-        <<" атакует игрока "<<target + 1<<"!\n Нажмите любую клавишу для продолжения...\n";
-    getch();
     show_status(attacker, target);
     coordinate = read_coordinate("Введите координаты точки, куда нужно выстрелить\n");
     
@@ -150,8 +148,20 @@ void make_shot(int attacker, int target)
     }
     else
     {
-        cout<<"Вы попали!\n";
-        deal_damage(coordinate);
+        shots[target][coordinate.first][coordinate.second] = DeathTile;
+        sea[target][coordinate.first][coordinate.second] = DeathTile;
+        death = 1;
+        dfs_check_if_dead(coordinate.first, coordinate.second, target, '0');
+        if(death)
+        {
+            cout<<"Вражеский корабль потоплен, так держать!\n";
+        }
+        else
+        {
+            cout<<"Вражеский корабль подбит, продолжайте в том же духе!\n";
+        }
+        
+        make_shot(attacker, target);
     }
 
 }
@@ -199,10 +209,10 @@ int main()
     const int PlayerAmount = read_player_amount();
     
     int ShipAmount [10];
-    for(int i=0;i<10;i++)
-        for(int j=0;j<10;j++)
+    for(int i=0;i<12;i++)
+        for(int j=0;j<12;j++)
             for(int h=0;h<PlayerAmount;h++)
-                {sea[h][i][j] = '~';
+                {sea[h][i][j] = EmptyTile;
                 shots[h][i][j] = '.';}
 
     for(int i=0;i<PlayerAmount;i++)
@@ -218,9 +228,9 @@ int main()
     for(int i = 0; i<PlayerAmount; i++)
     {
         cout<<"\n";
-        for(int j=0;j<10;j++)
+        for(int j=1;j<11;j++)
         {cout<<"\n";
-        for(int h=0;h<10;h++)
+        for(int h=1;h<11;h++)
         cout<<sea[i][j][h];}
     }
     
@@ -241,10 +251,15 @@ int main()
                 exit(0);
             }
         }
+        //system("cls");
+        cout<<"Игрок "<<attacker + 1
+            <<" атакует игрока "<<target + 1<<"!\n Нажмите любую клавишу для продолжения...\n";
+         getch();
         make_shot(attacker, target);
-        
-
-
+        cout<<"Ваш ход окончен.\n (нажмите любую клавишу)\n";
+        attacker = (attacker + 1) % PlayerAmount;
+        while(ShipAmount[attacker] == 0)
+        attacker = (attacker + 1) % PlayerAmount;
     }
 
 
