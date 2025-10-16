@@ -54,8 +54,8 @@ bool death = 0;
 int read_player_amount(void)
 {
     char input [256];
-    cin >> input;
-    if((atoi(input) < 2) || (atoi(input) > 5))
+    cin.getline(input, 256);
+    if((atoi(input) < 2) || (atoi(input) > 5) || (to_string(atoi(input)) != input))
     {
         cout<<"Ошибка ввода. В игре могут принимать участие от 2 до 5 игроков. Попробуйте снова\n";
         return read_player_amount();
@@ -72,7 +72,7 @@ pair <int, int> read_coordinate(string comment)
 
     cout<<comment;
     cin>>input2>>input1;
-    input2 = toupper(input2);
+    input2 = (char)toupper(input2);
     if((to_string(atoi(input1)) != input1) || (atoi(input1) < 1) || (atoi(input1) > 10) 
     || (input2  < 'A') || (input2 > 'J' ))
         return read_coordinate("Некорректный ввод. Попробуйте снова:\n");
@@ -91,10 +91,9 @@ char read_direction(string comment)
 
     cout<<comment;
     cin>>input;
-    input = toupper(input);
+    input = (char)toupper(input);
     if (IsDirection[input] != 1)
         {
-
             return read_direction("Некорректный ввод. Попробуйте снова:\n");
         }
          else
@@ -105,7 +104,7 @@ char read_direction(string comment)
 
 void show_death(int dead_buddy)
 {
-    cout<<"Ход игрока "<<dead_buddy+1<<"\n Нажмите любую кнопку для продолжения...";
+    cout<<"Ход игрока "<<dead_buddy+1<<". Нажмите любую кнопку для продолжения...";
     getch();
     printf("\033c");
     cout<<"К сожалению, все Ваши кораблики были потоплены. Вы проиграли :(\n"
@@ -119,20 +118,21 @@ void show_death(int dead_buddy)
 void show_status(int attacker, int target)
 {
     cout<<"<+-ABCDEFJHIJ T ABCDEFGHIJ-+>\n";
-    for(int i=1;i<=10;i++)
+    for(int i = 1; i <= 10; i++)
     {
         cout<<" "<<i % 10<<" ";
-        for(int j=1;j<=10;j++)
+        for(int j = 1; j <= 10; j++)
         {
             cout<<sea[attacker][i][j];
         }
         cout<<" | ";
-        for(int j=1;j<=10;j++)
+        for(int j = 1; j <= 10; j++)
         {
             cout<<shots[target][i][j];
         }
         cout<<" "<<i % 10<<"\n";
     }
+    cout<<" \\____________I____________/\n";
 }
 
 void dfs_check_if_dead(int x, int y, int target, char block)
@@ -234,14 +234,14 @@ int ship_build(int player, int size)
     char input_d;
 
                 ret_val++;
-                cout<<"Сейчас ваш кораблик размера "<<size+1<<". Введите ";
-                input_c = read_coordinate("координаты начала корабля:\n");
-                input_d = read_direction("А теперь направление, куда смотрит кораблик: \n");
+                cout<<"Сейчас ваш кораблик размера "<<size+1;
+                input_c = read_coordinate(". Введите координаты начала корабля:\n");
+                input_d = read_direction("А теперь направление, куда смотрит кораблик:\n");
 
                 if (check_position(player, size, input_c, input_d))
                 {
                     printf("\033c");
-                    cout<<"Вы не можете поставить кораблик таким образом(\nВероятно, он стоит по соседству с другим корабликом, пересекает его или выходит за карту\n Нажмите любую кнопку - и процесс его устанвки начнется заново.";
+                    cout<<"Вы не можете поставить кораблик таким образом(\nВероятно, он стоит по соседству с другим корабликом, пересекает его или выходит за карту\nНажмите любую кнопку - и процесс его устанвки начнется заново.";
                     getch();
                     printf("\033c");
                     return ship_build(player, size);
@@ -271,7 +271,7 @@ int main()
 {
     setlocale(LC_ALL, "Russian");
 
-    cout<<"Добро пожаловать в игру \"Морской бой\"! \n Пожалуйста, введите число участников\n";
+    cout<<"Добро пожаловать в игру \"Морской бой\"! \nПожалуйста, введите число участников\n";
     const int PlayerAmount = read_player_amount();
 
     for(int i = 0;i < 12; i++)
@@ -288,7 +288,7 @@ int main()
     for(int h = 0; h < PlayerAmount; h++)
     {
      printf("\033c");
-     cout<<"\nСейчас будет ходить игрок №"<<h+1;
+     cout<<"Сейчас будет ходить игрок №"<<h+1;
      cout<<". Нажмите любую клавишу для продолжения...\n";
      getch();
      printf("\033c");
