@@ -17,22 +17,22 @@ map <char, bool> IsDirection = {
     {'D', 1}
 };
 map <char, pair<int,int>> DirectionVector = {
-    {'W', {1, 0}},
-    {'S', {-1, 0}},
+    {'W', {-1, 0}},
+    {'S', {1, 0}},
     {'D', {0, 1}},
     {'A', {0, -1}}
 
 };
 map <char, char> ShipBow = {
-    {'W', 'V'},
-    {'S', 'A'},
+    {'W', 'A'},
+    {'S', 'V'},
     {'D', '>'},
     {'A', '<'}
 
 };
 map <char, char> ShipSterm = {
-    {'W', 'M'},
-    {'S', 'U'},
+    {'W', 'U'},
+    {'S', 'M'},
     {'D', 'C'},
     {'A', 'D'}
 
@@ -44,6 +44,7 @@ const char DeathTile = 'X';
 const char MissTile = 'O';
 char sea [10][10][10];
 char shots [10][10][10];
+int health_map;
 
 
 int read_player_amount(void)
@@ -81,20 +82,30 @@ pair <int, int> read_coordinate(string comment)
 
 char read_direction(string comment)
 {
-    char input;
+    string input;
+    char in;
 
     cout<<comment;
     cin>>input;
-    input = toupper(input);
-    if (IsDirection[input] != 1)
+    if (input.length() > 1)
         {
 
             return read_direction("Некорректный ввод. Попробуйте снова:\n");
         }
          else
         {
-            return input;
+        in = input[0];
+    in = toupper(in);
+    if (IsDirection[in] != 1)
+        {
+
+            return read_direction("Некорректный ввод. Попробуйте снова:\n");
         }
+         else
+        {
+            return in;
+        }
+    }
 }
 
 void show_status(int attacker, int target)
@@ -116,6 +127,11 @@ void show_status(int attacker, int target)
     }
 }
 
+void deal_damage(pair <int, int> coordinate)
+{
+
+}
+
 void make_shot(int attacker, int target)
 {
     pair <int, int> coordinate;
@@ -135,8 +151,7 @@ void make_shot(int attacker, int target)
     else
     {
         cout<<"Вы попали!\n";
-        shots[target][coordinate.first][coordinate.second] = DeathTile;
-        sea[target][coordinate.first][coordinate.second] = DeathTile;
+        deal_damage(coordinate);
     }
 
 }
@@ -226,7 +241,6 @@ int main()
                 exit(0);
             }
         }
-        
         make_shot(attacker, target);
         
 
