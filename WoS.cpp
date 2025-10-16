@@ -1,13 +1,15 @@
 #include <cstdio>
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include <algorithm>
 #include <map>
 #include <conio.h>
 using namespace std;
 
 const int ShipTypes = 4;
-const int ShipSizeAmount [4] = {1, 1, 1, 1};
+const int ShipSizeAmount [4] = {0, 1, 1, 0};
+
 map <char, bool> IsDirection = {
     {'W', 1},
     {'S', 1},
@@ -22,21 +24,27 @@ map <char, pair<int,int>> DirectionVector = {
 
 };
 map <char, char> ShipBow = {
-    {'W', 'v'},
+    {'W', 'V'},
     {'S', 'A'},
-    {'D', '/'},
-    {'A', '\\'}
+    {'D', '>'},
+    {'A', '<'}
 
 };
 map <char, char> ShipSterm = {
     {'W', 'M'},
-    {'S', 'W'},
-    {'D', '\\'},
-    {'A', '/'}
+    {'S', 'U'},
+    {'D', 'C'},
+    {'A', 'D'}
 
 };
-const char ShipCorpse = '_';
+const int ACode = 65;
+const char ShipCorpse = 'H';
+const char EmptyTile = '~';
+const char DeathTile = 'X';
+const char MissTile = 'O';
 char sea [10][10][10];
+char shots [10][10][10];
+
 
 int read_player_amount(void)
 {
@@ -51,50 +59,121 @@ int read_player_amount(void)
     return atoi(input);
 
 }
-
-pair <pair<int, int>, char> read_input(void)
+pair <int, int> read_coordinate(string comment)
 {
-     pair <pair<int, int>, char> ret_val;
+    pair <int, int> ret_val;
     char input1[256];
-    char input2[256];
-    char input3;
+    char input2;
 
-    cout<<"Введите, куда его поставить\n";
-    cin>>input1>>input2>>input3;
-    input3 = toupper(input3);
-    if((((atoi(input1) < 1) || (atoi(input1) > 10)) || (IsDirection[input3] != 1)) || ((atoi(input2) < 1) || (atoi(input2) > 10)))
+    cout<<comment;
+    cin>>input2>>input1;
+    input2 = toupper(input2);
+    if((atoi(input1) < 1) || (atoi(input1) > 10) || (input2  < 'A') || (input2 > 'J' ))
+        return read_coordinate("Некорректный ввод. Попробуйте снова:\n");
+    else
+    {
+        ret_val.first = atoi(input1) - 1;
+        ret_val.second = (int)input2 - ACode;
+        return ret_val;
+    }
+
+}
+
+char read_direction(string comment)
+{
+    char input;
+
+    cout<<comment;
+    cin>>input;
+    input = toupper(input);
+    if (IsDirection[input] != 1)
         {
-            cout<<"Некорректный ввод. Попробуйте снова:\n";
-            return read_input();
+
+            return read_direction("Некорректный ввод. Попробуйте снова:\n");
         }
          else
         {
-            ret_val.first.first = atoi(input1) - 1;
-            ret_val.first.second = atoi(input2) - 1;
-            ret_val.second = input3;
-            return ret_val;
+            return input;
         }
+}
+
+void show_status(int attacker, int target)
+{
+    cout<<"+-ABCDEFJHIJ T ABCDEFGHIJ->\n";
+    for(int i=0;i<10;i++)
+    {
+        cout<<i%10<<" ";
+        for(int j=0;j<10;j++)
+        {
+            cout<<sea[attacker][i][j];
+        }
+        cout<<" | ";
+        for(int j=0;j<10;j++)
+        {
+            cout<<shots[target][i][j];
+        }
+        cout<<"\n";
+    }
+}
+
+void make_shot(int attacker, int target)
+{
+    pair <int, int> coordinate;
+    system("cls");
+    cout<<"Игрок "<<attacker + 1
+        <<" атакует игрока "<<target + 1<<"!\n Нажмите любую клавишу для продолжения...\n";
+    getch();
+    show_status(attacker, target);
+    coordinate = read_coordinate("Введите координаты точки, куда нужно выстрелить\n");
+    
+    if((sea[target][coordinate.first][coordinate.second] == EmptyTile) 
+    || (sea[target][coordinate.first][coordinate.second] == DeathTile))
+    {
+        cout<<"Вы промахнулись!\n";
+        shots[target][coordinate.first][coordinate.second] = MissTile;
+    }
+    else
+    {
+        cout<<"Вы попали!\n";
+        shots[target][coordinate.first][coordinate.second] = DeathTile;
+        sea[target][coordinate.first][coordinate.second] = DeathTile;
+    }
+
 }
 
 int ship_build(int p)
 {
     int ret_val = 0;
-    pair <pair<int, int>, char> input;
+    pair<int, int> input_c;
+    char input_d;
     for(int i = 1; i <= ShipTypes; i++)
         for(int j = 0; j < ShipSizeAmount[i-1]; j++)
             {
                 ret_val++;
-                cout<<"Сейчас ваш кораблик размера "<<i+1<<". ";
-                input = read_input();
+                cout<<"Сейчас ваш кораблик размера "<<i+1<<". Введите ";
+                input_c = read_coordinate("координаты начала корабля:\n");
+                input_d = read_direction("А теперь направление, куда смотрит кораблик: \n");
 
-                sea[p][input.first.first][input.first.second] = ShipSterm[input.second];
+                sea[p][input_c.first][input_c.second] = ShipSterm[input_d];
                 for(int h = 1; h <i; h++)
                 {
-                    sea[p][input.first.first + DirectionVector[input.second].first*h][input.first.second + DirectionVector[input.second].second*h] = ShipCorpse;
+                    sea[p][input_c.first + DirectionVector[input_d].first*h]
+                          [input_c.second + DirectionVector[input_d].second*h] 
+                          = ShipCorpse;
                 }
-               sea[p][input.first.first + DirectionVector[input.second].first*i][input.first.second + DirectionVector[input.second].second*i] = ShipBow[input.second];
+                sea[p][input_c.first + DirectionVector[input_d].first*i]
+                      [input_c.second + DirectionVector[input_d].second*i] 
+                      = ShipBow[input_d];
+
+                system("cls");
+                cout<<"Установка прошла успешно! Переходим к следующему кораблю.\n";
             }
-return ret_val;
+    return ret_val;
+}
+
+void finishing_game(int winner)
+{
+    cout<<"Победил игрок "<<winner<<"! Поздравляем!\n";
 }
 
 int main()
@@ -108,13 +187,16 @@ int main()
     for(int i=0;i<10;i++)
         for(int j=0;j<10;j++)
             for(int h=0;h<PlayerAmount;h++)
-                sea[h][i][j] = '~';
+                {sea[h][i][j] = '~';
+                shots[h][i][j] = '.';}
 
     for(int i=0;i<PlayerAmount;i++)
     {
+     system("cls");
      cout<<"\nСейчас будет ходить игрок №"<<i+1;
      cout<<". Нажмите любую клавишу для продолжения...\n";
      getch();
+     system("cls");
      ShipAmount[i] = ship_build(i);
     }
 
@@ -126,9 +208,36 @@ int main()
         for(int h=0;h<10;h++)
         cout<<sea[i][j][h];}
     }
-
-
-
     
+    int attacker = 0;
+    int target = 1;
+    cout<<"\nВсе кораблики установлены! Начинаем игру.\n (Нажмите любую кнопку)";
+    getch();
+
+    while(2+2 == 4)
+    {
+        target = (attacker + 1) % PlayerAmount;
+        while(ShipAmount[target] == 0)
+        {
+            target = (target + 1) % PlayerAmount;
+            if(attacker == target)
+            {
+                finishing_game(attacker);
+                exit(0);
+            }
+        }
+        
+        make_shot(attacker, target);
+        
+
+
+    }
+
+
+
+
+ 
+
+ 
     return 0;
 }
