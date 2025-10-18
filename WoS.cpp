@@ -232,33 +232,33 @@ int ship_build(int player, int size)
     int ret_val = 0;
     pair <int, int> input_c;
     char input_d;
+    ret_val++;
+    cout<<"Сейчас ваш кораблик размера "<<size+1;
+    input_c = read_coordinate(". Введите координаты начала корабля:\n");
+    input_d = read_direction("А теперь направление, куда смотрит кораблик:\n");
 
-                ret_val++;
-                cout<<"Сейчас ваш кораблик размера "<<size+1;
-                input_c = read_coordinate(". Введите координаты начала корабля:\n");
-                input_d = read_direction("А теперь направление, куда смотрит кораблик:\n");
+    if (check_position(player, size, input_c, input_d))
+    {
+        printf("\033c");
+        cout<<"Вы не можете поставить кораблик таким образом(\nВероятно, он стоит по соседству с другим корабликом, пересекает его или выходит за карту\nНажмите любую кнопку - и процесс его устанвки начнется заново.";
+        getch();
+        printf("\033c");
+        return ship_build(player, size);
+    }
 
-                if (check_position(player, size, input_c, input_d))
-                {
-                    printf("\033c");
-                    cout<<"Вы не можете поставить кораблик таким образом(\nВероятно, он стоит по соседству с другим корабликом, пересекает его или выходит за карту\nНажмите любую кнопку - и процесс его устанвки начнется заново.";
-                    getch();
-                    printf("\033c");
-                    return ship_build(player, size);
-                }
-                sea[player][input_c.first][input_c.second] = ShipSterm[input_d];
-                for(int h = 1; h < size; h++)
-                {
-                    sea[player][input_c.first + DirectionVector[input_d].first*h]
-                               [input_c.second + DirectionVector[input_d].second*h] 
-                               = ShipCorpse;
-                }
-                sea[player][input_c.first + DirectionVector[input_d].first*size]
-                           [input_c.second + DirectionVector[input_d].second*size] 
-                           = ShipBow[input_d];
+    sea[player][input_c.first][input_c.second] = ShipSterm[input_d];
+    for(int h = 1; h < size; h++)
+    {
+        sea[player][input_c.first + DirectionVector[input_d].first*h]
+                    [input_c.second + DirectionVector[input_d].second*h] 
+                     = ShipCorpse;
+    }
+    sea[player][input_c.first + DirectionVector[input_d].first*size]
+                [input_c.second + DirectionVector[input_d].second*size] 
+                 = ShipBow[input_d];
 
-                printf("\033c");
-                cout<<"Установка прошла успешно! Переходим к следующему кораблю.\n";
+    printf("\033c");
+    cout<<"Установка прошла успешно! Переходим к следующему кораблю.\n";
     return ret_val;
 }
 
