@@ -2,3 +2,5 @@
 *.json
 output
 *.exe
+*Debug
+*.o
